@@ -106,6 +106,27 @@ func (consumer *Consumer) GetUnacked() (*Package, error) {
 	return consumer.parseRedisAnswer(answer)
 }
 
+// GetUnacked returns a single packages from the working queue of this consumer
+func (consumer *Consumer) GetAllUnacked() ([]*Package, error) {
+	if !consumer.HasUnacked() {
+		return nil, fmt.Errorf("no unacked Packages found")
+	}
+	allUnacked := make([]*Package, consumer.GetUnackedLength())
+	unackedLength := -1 * consumer.GetUnackedLength()
+	for i := int64(-1); i >= unackedLength ; i-- {
+		answer := consumer.Queue.redisClient.LIndex(
+			consumerWorkingQueueKey(consumer.Queue.Name, consumer.Name),
+			i,
+		)
+		payload, err := consumer.parseRedisAnswer(answer)
+		if err != nil {
+			return nil, err
+		}
+		allUnacked = append(allUnacked, payload)
+	}
+	return allUnacked, nil
+}
+
 // HasUnacked returns true if the consumers has unacked packages
 func (consumer *Consumer) HasUnacked() bool {
 	if consumer.GetUnackedLength() != 0 {
