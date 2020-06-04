@@ -111,7 +111,7 @@ func (consumer *Consumer) GetAllUnacked() ([]*Package, error) {
 	if !consumer.HasUnacked() {
 		return nil, fmt.Errorf("no unacked Packages found")
 	}
-	allUnacked := make([]*Package, consumer.GetUnackedLength())
+	var allUnacked []*Package
 	unackedLength := -1 * consumer.GetUnackedLength()
 	for i := int64(-1); i >= unackedLength ; i-- {
 		answer := consumer.Queue.redisClient.LIndex(
